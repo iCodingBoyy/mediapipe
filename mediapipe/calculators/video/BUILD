@@ -65,6 +65,15 @@ proto_library(
     ],
 )
 
+proto_library(
+    name = "video_pre_stream_calculator_proto",
+    srcs = ["video_pre_stream_calculator.proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mediapipe/framework:calculator_proto",
+    ],
+)
+
 mediapipe_cc_proto_library(
     name = "motion_analysis_calculator_cc_proto",
     srcs = ["motion_analysis_calculator.proto"],
@@ -99,6 +108,16 @@ mediapipe_cc_proto_library(
 )
 
 mediapipe_cc_proto_library(
+    name = "video_pre_stream_calculator_cc_proto",
+    srcs = ["video_pre_stream_calculator.proto"],
+    cc_deps = [
+        "//mediapipe/framework:calculator_cc_proto",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [":video_pre_stream_calculator_proto"],
+)
+
+mediapipe_cc_proto_library(
     name = "flow_to_image_calculator_cc_proto",
     srcs = ["flow_to_image_calculator.proto"],
     cc_deps = ["//mediapipe/framework:calculator_cc_proto"],
@@ -119,7 +138,7 @@ cc_library(
     srcs = ["flow_to_image_calculator.cc"],
     visibility = ["//visibility:public"],
     deps = [
-        "//mediapipe/calculators/video:flow_to_image_calculator_cc_proto",
+        ":flow_to_image_calculator_cc_proto",
         "//mediapipe/calculators/video/tool:flow_quantizer_model",
         "//mediapipe/framework:calculator_framework",
         "//mediapipe/framework/formats:image_format_cc_proto",
@@ -280,6 +299,19 @@ cc_library(
     alwayslink = 1,
 )
 
+cc_library(
+    name = "video_pre_stream_calculator",
+    srcs = ["video_pre_stream_calculator.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":video_pre_stream_calculator_cc_proto",
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:image_frame",
+        "//mediapipe/framework/formats:video_stream_header",
+    ],
+    alwayslink = 1,
+)
+
 filegroup(
     name = "test_videos",
     srcs = [
@@ -336,6 +368,7 @@ cc_test(
 cc_test(
     name = "tvl1_optical_flow_calculator_test",
     srcs = ["tvl1_optical_flow_calculator_test.cc"],
+    linkstatic = 1,
     deps = [
         ":tvl1_optical_flow_calculator",
         "//mediapipe/framework:calculator_framework",
@@ -351,20 +384,18 @@ cc_test(
     ],
 )
 
-MEDIAPIPE_DEPS = [
-    "//mediapipe/calculators/video:box_tracker_calculator",
-    "//mediapipe/calculators/video:flow_packager_calculator",
-    "//mediapipe/calculators/video:motion_analysis_calculator",
-    "//mediapipe/framework/stream_handler:fixed_size_input_stream_handler",
-    "//mediapipe/framework/stream_handler:sync_set_input_stream_handler",
-]
-
 mediapipe_binary_graph(
     name = "parallel_tracker_binarypb",
     graph = "testdata/parallel_tracker_graph.pbtxt",
     output_name = "testdata/parallel_tracker.binarypb",
     visibility = ["//visibility:public"],
-    deps = MEDIAPIPE_DEPS,
+    deps = [
+        ":box_tracker_calculator",
+        ":flow_packager_calculator",
+        ":motion_analysis_calculator",
+        "//mediapipe/framework/stream_handler:fixed_size_input_stream_handler",
+        "//mediapipe/framework/stream_handler:sync_set_input_stream_handler",
+    ],
 )
 
 mediapipe_binary_graph(
@@ -372,7 +403,13 @@ mediapipe_binary_graph(
     graph = "testdata/tracker_graph.pbtxt",
     output_name = "testdata/tracker.binarypb",
     visibility = ["//visibility:public"],
-    deps = MEDIAPIPE_DEPS,
+    deps = [
+        ":box_tracker_calculator",
+        ":flow_packager_calculator",
+        ":motion_analysis_calculator",
+        "//mediapipe/framework/stream_handler:fixed_size_input_stream_handler",
+        "//mediapipe/framework/stream_handler:sync_set_input_stream_handler",
+    ],
 )
 
 cc_test(
@@ -409,5 +446,19 @@ cc_test(
         "//mediapipe/framework/stream_handler:sync_set_input_stream_handler",
         "//mediapipe/util/tracking:box_tracker_cc_proto",
         "//mediapipe/util/tracking:tracking_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "video_pre_stream_calculator_test",
+    srcs = ["video_pre_stream_calculator_test.cc"],
+    deps = [
+        ":video_pre_stream_calculator",
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:image_frame",
+        "//mediapipe/framework/formats:video_stream_header",
+        "//mediapipe/framework/port:gtest_main",
+        "//mediapipe/framework/port:parse_text_proto",
+        "//mediapipe/framework/port:status",
     ],
 )

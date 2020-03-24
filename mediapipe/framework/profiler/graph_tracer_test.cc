@@ -1267,9 +1267,9 @@ TEST_F(GraphTracerE2ETest, GpuTracing) {
         output_stream: "annotated_buffer"
         node {
           calculator: "AnnotationOverlayCalculator"
-          input_stream: "INPUT_FRAME:input_buffer"
+          input_stream: "IMAGE:input_buffer"
           input_stream: "render_data"
-          output_stream: "OUTPUT_FRAME:annotated_buffer"
+          output_stream: "IMAGE:annotated_buffer"
         }
         profiler_config {
           trace_enabled: true
@@ -1282,6 +1282,34 @@ TEST_F(GraphTracerE2ETest, GpuTracing) {
   // Check that GPU profiling is enabled wihout running the graph.
   // This graph with GlFlatColorCalculator cannot run on desktop.
   EXPECT_NE(nullptr, graph_.profiler()->CreateGlProfilingHelper());
+}
+
+// This test shows that ~CalculatorGraph() can complete successfully, even when
+// the periodic profiler output is enabled.  If periodic profiler output is not
+// stopped in ~CalculatorGraph(), it will deadlock at ~Executor().
+TEST_F(GraphTracerE2ETest, DestructGraph) {
+  std::string log_path = absl::StrCat(getenv("TEST_TMPDIR"), "/log_file_");
+  SetUpPassThroughGraph();
+  graph_config_.mutable_profiler_config()->set_trace_enabled(true);
+  graph_config_.mutable_profiler_config()->set_trace_log_path(log_path);
+  graph_config_.set_num_threads(4);
+
+  // Callbacks to control the LambdaCalculator.
+  ProcessFunction wait_0 = [&](const InputStreamShardSet& inputs,
+                               OutputStreamShardSet* outputs) {
+    return PassThrough(inputs, outputs);
+  };
+
+  {
+    CalculatorGraph graph;
+    // Start the graph with the callback.
+    MP_ASSERT_OK(graph.Initialize(graph_config_,
+                                  {
+                                      {"callback_0", Adopt(new auto(wait_0))},
+                                  }));
+    MP_ASSERT_OK(graph.StartRun({}));
+    // Destroy the graph immediately.
+  }
 }
 
 }  // namespace

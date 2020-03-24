@@ -16,6 +16,7 @@
 
 #include <dirent.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 
 #include <cerrno>
@@ -57,10 +58,11 @@ namespace file {
   }
 
   fwrite(content.data(), sizeof(char), content.size(), fp);
-  size_t ret = fclose(fp);
-  if (ret == 0 && ferror(fp)) {
+  size_t write_error = ferror(fp);
+  if (fclose(fp) != 0 || write_error) {
     return ::mediapipe::InternalErrorBuilder(MEDIAPIPE_LOC)
-           << "Error while writing file: " << file_name;
+           << "Error while writing file: " << file_name
+           << ". Error message: " << strerror(write_error);
   }
   return ::mediapipe::OkStatus();
 }
@@ -98,6 +100,30 @@ namespace file {
       }
     }
     closedir(sub_dir);
+  }
+  closedir(dir);
+  return ::mediapipe::OkStatus();
+}
+
+::mediapipe::Status MatchFileTypeInDirectory(
+    const std::string& directory, const std::string& file_suffix,
+    std::vector<std::string>* results) {
+  DIR* dir = opendir(directory.c_str());
+  CHECK(dir);
+  // Iterates through the direcotry.
+  while (true) {
+    struct dirent* dir_ent = readdir(dir);
+    if (dir_ent == nullptr) {
+      break;
+    }
+    if (std::string(dir_ent->d_name) == "." ||
+        std::string(dir_ent->d_name) == "..") {
+      continue;
+    }
+
+    if (absl::EndsWith(std::string(dir_ent->d_name), file_suffix)) {
+      results->push_back(JoinPath(directory, std::string(dir_ent->d_name)));
+    }
   }
   closedir(dir);
   return ::mediapipe::OkStatus();

@@ -303,6 +303,7 @@ objc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//mediapipe/objc:mediapipe_framework_ios",
+        "@com_google_absl//absl/time",
         "@google_toolbox_for_mac//:GTM_Defines",
     ],
 )
@@ -919,6 +920,7 @@ objc_library(
 ios_unit_test(
     name = "gl_ios_test",
     minimum_os_version = MIN_IOS_VERSION,
+    runner = "//googlemac/iPhone/Shared/Testing/EarlGrey/Runner:IOS_LATEST",
     tags = [
         "ios",
     ],

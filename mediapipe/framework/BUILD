@@ -361,6 +361,7 @@ cc_library(
         "//mediapipe/framework:mediapipe_options_cc_proto",
         "//mediapipe/framework:packet_generator_cc_proto",
         "//mediapipe/framework:status_handler_cc_proto",
+        "//mediapipe/framework:stream_handler_cc_proto",
         "//mediapipe/framework/port:any_proto",
         "//mediapipe/framework/port:status",
         "//mediapipe/framework/tool:options_util",
@@ -536,6 +537,7 @@ cc_library(
         "//mediapipe/framework/profiler:graph_profiler",
         "//mediapipe/framework/stream_handler:default_input_stream_handler",
         "//mediapipe/framework/stream_handler:in_order_output_stream_handler",
+        "//mediapipe/framework/tool:name_util",
         "//mediapipe/framework/tool:status_util",
         "//mediapipe/framework/tool:tag_map",
         "//mediapipe/framework/tool:validate_name",
@@ -1077,10 +1079,16 @@ cc_library(
 cc_library(
     name = "port",
     hdrs = ["port.h"],
+    defines = select({
+        "//conditions:default": [],
+    }) + select({
+        "//conditions:default": [],
+        "//mediapipe/gpu:disable_gpu": ["MEDIAPIPE_DISABLE_GPU"],
+    }),
     visibility = [
         "//mediapipe/framework:__subpackages__",
         "//mediapipe/framework/port:__pkg__",
-        "//mediapipe/util:__pkg__",
+        "//mediapipe/util:__subpackages__",
     ],
 )
 
@@ -1268,6 +1276,7 @@ cc_library(
         "//mediapipe/framework/port:source_location",
         "//mediapipe/framework/port:status",
         "//mediapipe/framework/port:topologicalsorter",
+        "//mediapipe/framework/tool:name_util",
         "//mediapipe/framework/tool:status_util",
         "//mediapipe/framework/tool:subgraph_expansion",
         "//mediapipe/framework/tool:validate",

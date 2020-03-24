@@ -80,7 +80,9 @@ mediapipe_cc_proto_library(
     name = "opencv_image_encoder_calculator_cc_proto",
     srcs = ["opencv_image_encoder_calculator.proto"],
     cc_deps = ["//mediapipe/framework:calculator_cc_proto"],
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//visibility:public",
+    ],
     deps = [":opencv_image_encoder_calculator_proto"],
 )
 
@@ -330,6 +332,7 @@ cc_library(
 cc_library(
     name = "image_cropping_calculator",
     srcs = ["image_cropping_calculator.cc"],
+    hdrs = ["image_cropping_calculator.h"],
     copts = select({
         "//mediapipe:apple": [
             "-x objective-c++",
@@ -343,9 +346,7 @@ cc_library(
         ],
         "//conditions:default": [],
     }),
-    visibility = [
-        "//visibility:public",
-    ],
+    visibility = ["//visibility:public"],
     deps = [
         ":image_cropping_calculator_cc_proto",
         "//mediapipe/framework:calculator_framework",
@@ -367,6 +368,22 @@ cc_library(
         ],
     }),
     alwayslink = 1,
+)
+
+cc_test(
+    name = "image_cropping_calculator_test",
+    srcs = ["image_cropping_calculator_test.cc"],
+    deps = [
+        ":image_cropping_calculator",
+        ":image_cropping_calculator_cc_proto",
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:rect_cc_proto",
+        "//mediapipe/framework/port:gtest_main",
+        "//mediapipe/framework/port:parse_text_proto",
+        "//mediapipe/framework/port:status",
+        "//mediapipe/framework/tool:tag_map",
+        "//mediapipe/framework/tool:tag_map_helper",
+    ],
 )
 
 cc_library(
@@ -405,9 +422,12 @@ cc_library(
         ":recolor_calculator_cc_proto",
         "//mediapipe/framework:calculator_framework",
         "//mediapipe/framework/formats:image_frame",
+        "//mediapipe/framework/formats:image_frame_opencv",
         "//mediapipe/framework/port:status",
         "//mediapipe/framework/port:ret_check",
         "//mediapipe/util:color_cc_proto",
+        "//mediapipe/framework/port:opencv_core",
+        "//mediapipe/framework/port:opencv_imgproc",
     ] + select({
         "//mediapipe/gpu:disable_gpu": [],
         "//conditions:default": [

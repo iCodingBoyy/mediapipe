@@ -44,6 +44,14 @@ graphs can be easily adapted to run on CPU v.s. GPU.
 [Object Detection and Tracking with GPU](./object_tracking_mobile_gpu.md) illustrates how to
 use MediaPipe for object detection and tracking.
 
+### Objectron: 3D Object Detection and Tracking with GPU
+
+[MediaPipe Objectron is 3D Object Detection with GPU](./objectron_mobile_gpu.md)
+illustrates mobile real-time 3D object detection and tracking pipeline for every
+day objects like shoes and chairs
+
+*   [Android](./objectron_mobile_gpu.md)
+
 ### Face Detection with GPU
 
 [Face Detection with GPU](./face_detection_mobile_gpu.md) illustrates how to use
@@ -108,9 +116,9 @@ and model details are described in the
 [Hello World for C++](./hello_world_desktop.md) shows how to run a simple graph
 using the MediaPipe C++ APIs.
 
-### Feature Extration for YouTube-8M Challenge
+### Feature Extraction and Model Inference for YouTube-8M Challenge
 
-[Feature Extration and Model Inference for YouTube-8M Challenge](./youtube_8m.md)
+[Feature Extraction and Model Inference for YouTube-8M Challenge](./youtube_8m.md)
 shows how to use MediaPipe to prepare training data for the YouTube-8M Challenge
 and do the model inference with the baseline model.
 
@@ -119,6 +127,11 @@ and do the model inference with the baseline model.
 [Preparing Data Sets with MediaSequence](./media_sequence.md) shows how to use
 MediaPipe for media processing to prepare video data sets for training a
 TensorFlow model.
+
+### AutoFlip - Automatic video cropping
+
+[AutoFlip](./autoflip.md) shows how to use MediaPipe to build an automatic video
+cropping pipeline that can convert an input video to arbitrary aspect ratios.
 
 ### Object Detection on Desktop
 
@@ -136,6 +149,7 @@ GPU with live video from a webcam.
 
 *   [Desktop GPU](./face_detection_desktop.md)
 *   [Desktop CPU](./face_detection_desktop.md)
+
 
 ### Hand Tracking on Desktop with Webcam
 
@@ -179,3 +193,18 @@ EdgeTPU on
 [Face Detection on Coral with Webcam](./face_detection_coral_devboard.md) shows
 how to use quantized face detection TFlite model accelerated with EdgeTPU on
 [Google Coral Dev Board](https://coral.withgoogle.com/products/dev-board).
+
+
+## Web Browser
+
+Below are samples that can directly be run in your web browser.
+See more details in [MediaPipe on the Web](./web.md) and
+[Google Developer blog post](https://mediapipe.page.link/webdevblog)
+
+### [Face Detection In Browser](https://viz.mediapipe.dev/demo/face_detection)
+
+### [Hand Detection In Browser](https://viz.mediapipe.dev/demo/hand_detection)
+
+### [Hand Tracking In Browser](https://viz.mediapipe.dev/demo/hand_tracking)
+
+### [Hair Segmentation In Browser](https://viz.mediapipe.dev/demo/hair_segmentation)

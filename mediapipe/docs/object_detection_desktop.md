@@ -26,6 +26,7 @@ To build and run the TensorFlow example on desktop, run:
 $ bazel build -c opt \
     --define MEDIAPIPE_DISABLE_GPU=1 \
     --define no_aws_support=true \
+    --linkopt=-s \
     mediapipe/examples/desktop/object_detection:object_detection_tensorflow
 
 # It should print:
@@ -163,9 +164,9 @@ node {
 # the graph.
 node {
   calculator: "AnnotationOverlayCalculator"
-  input_stream: "INPUT_FRAME:input_video"
+  input_stream: "IMAGE:input_video"
   input_stream: "render_data"
-  output_stream: "OUTPUT_FRAME:output_video"
+  output_stream: "IMAGE:output_video"
 }
 
 # Encodes the annotated images into a video file, adopting properties specified
@@ -214,7 +215,6 @@ To build and run the TensorFlow Lite example on desktop (CPU) with Webcam, run:
 # Video from webcam running on desktop CPU
 $ bazel build -c opt --define MEDIAPIPE_DISABLE_GPU=1 \
     mediapipe/examples/desktop/object_detection:object_detection_cpu
-
 # It should print:
 #Target //mediapipe/examples/desktop/object_detection:object_detection_cpu up-to-date:
 #  bazel-bin/mediapipe/examples/desktop/object_detection/object_detection_cpu
@@ -397,9 +397,9 @@ node {
 # the graph.
 node {
   calculator: "AnnotationOverlayCalculator"
-  input_stream: "INPUT_FRAME:input_video"
+  input_stream: "IMAGE:input_video"
   input_stream: "render_data"
-  output_stream: "OUTPUT_FRAME:output_video"
+  output_stream: "IMAGE:output_video"
 }
 
 # Encodes the annotated images into a video file, adopting properties specified

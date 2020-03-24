@@ -177,7 +177,7 @@ cc_library(
     deps = [
         "//mediapipe/framework:packet",
         "//mediapipe/framework/port:statusor",
-        "@org_tensorflow//tensorflow/core:protos_all",
+        "@org_tensorflow//tensorflow/core:protos_all_cc",
     ],
 )
 
@@ -244,6 +244,7 @@ cc_library(
     hdrs = ["subgraph_expansion.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":name_util",
         ":tag_map",
         "//mediapipe/framework:calculator_cc_proto",
         "//mediapipe/framework:packet_generator",

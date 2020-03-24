@@ -6,7 +6,7 @@ that performs object detection and tracking.
 Note that object detection is using TensorFlow Lite on GPU while tracking is using CPU.
 
 For overall context on object detection and tracking, please read this
-[Google Developer Blog](https://mediapipe.page.link/objecttrackingblog).
+[Google Developers Blog](https://mediapipe.page.link/objecttrackingblog).
 
 ![object_tracking_android_gpu_gif](images/mobile/object_tracking_android_gpu.gif)
 
@@ -238,7 +238,7 @@ tracking library that can be used for other use cases.
 
 ![object_tracking_subgraph](images/mobile/object_tracking_subgraph.png)
 
-[Source pbtxt file](https://github.com/google/mediapipe/tree/master/mediapipe/graphs/tracking/subgraphs/object_tracking.pbtxt)
+[Source pbtxt file](https://github.com/google/mediapipe/tree/master/mediapipe/graphs/tracking/subgraphs/object_tracking_gpu.pbtxt)
 
 ```bash
 # MediaPipe object tracking subgraph.
@@ -304,7 +304,7 @@ node: {
 
 ![box_tracking_subgraph](images/mobile/box_tracking_subgraph.png)
 
-[Source pbtxt file](https://github.com/google/mediapipe/tree/master/mediapipe/graphs/tracking/subgraphs/box_tracking.pbtxt)
+[Source pbtxt file](https://github.com/google/mediapipe/tree/master/mediapipe/graphs/tracking/subgraphs/box_tracking_gpu.pbtxt)
 
 ```bash
 # MediaPipe box tracking subgraph.
@@ -467,9 +467,26 @@ node {
 # Draws annotations and overlays them on top of the input images.
 node {
   calculator: "AnnotationOverlayCalculator"
-  input_stream: "INPUT_FRAME_GPU:input_image"
+  input_stream: "IMAGE_GPU:input_image"
   input_stream: "detections_render_data"
-  output_stream: "OUTPUT_FRAME_GPU:output_image"
+  output_stream: "IMAGE_GPU:output_image"
 }
 
+```
+
+## Desktop
+
+[Source](https://github.com/google/mediapipe/tree/master/mediapipe/examples/desktop/object_tracking)
+
+Note that object detection is using TensorFlow Lite on CPU and tracking is using
+CPU.
+
+To build and run the app:
+
+```bash
+bazel build -c opt mediapipe/examples/desktop/object_tracking:object_tracking_cpu \
+  --define MEDIAPIPE_DISABLE_GPU=1
+
+bazel-bin/mediapipe/examples/desktop/object_tracking/object_tracking_cpu \
+  --calculator_graph_config_file=mediapipe/graphs/tracking/object_detection_tracking_desktop_live.pbtxt
 ```

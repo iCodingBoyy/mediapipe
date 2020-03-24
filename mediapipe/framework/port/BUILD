@@ -129,10 +129,12 @@ cc_library(
     name = "image_resizer",
     hdrs = ["image_resizer.h"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//mediapipe/framework/deps:image_resizer",
-        "//third_party:opencv",
-    ],
+    deps = select({
+        "//conditions:default": [
+            "//mediapipe/framework/deps:image_resizer",
+            "//mediapipe/framework/port:opencv_core",
+        ],
+    }),
 )
 
 cc_library(
@@ -349,6 +351,7 @@ cc_library(
         ":source_location",
         "//mediapipe/framework:port",
         "//mediapipe/framework/deps:status",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
     ],
 )

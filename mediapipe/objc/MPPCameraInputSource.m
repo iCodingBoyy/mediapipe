@@ -25,10 +25,12 @@
   AVCaptureDeviceInput* _videoDeviceInput;
   AVCaptureVideoDataOutput* _videoDataOutput;
   AVCaptureDepthDataOutput* _depthDataOutput;
-  AVCaptureDevice *_currentDevice;
+  AVCaptureDevice* _currentDevice;
 
+  matrix_float3x3 _cameraIntrinsicMatrix;
   OSType _pixelFormatType;
   BOOL _autoRotateBuffers;
+  BOOL _didReadCameraIntrinsicMatrix;
   BOOL _setupDone;
   BOOL _useDepth;
   BOOL _useCustomOrientation;
@@ -48,8 +50,7 @@
   return self;
 }
 
-- (void)setDelegate:(id<MPPInputSourceDelegate>)delegate
-              queue:(dispatch_queue_t)queue {
+- (void)setDelegate:(id<MPPInputSourceDelegate>)delegate queue:(dispatch_queue_t)queue {
   [super setDelegate:delegate queue:queue];
   // Note that _depthDataOutput and _videoDataOutput may not have been created yet. In that case,
   // this message to nil is ignored, and the delegate will be set later by setupCamera.
@@ -155,9 +156,7 @@
 - (void)setPixelFormatType:(OSType)pixelFormatType {
   _pixelFormatType = pixelFormatType;
   if ([self isRunning]) {
-    _videoDataOutput.videoSettings = @{
-      (id)kCVPixelBufferPixelFormatTypeKey : @(_pixelFormatType)
-    };
+    _videoDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey : @(_pixelFormatType)};
   }
 }
 
@@ -179,10 +178,10 @@
   }
 
   AVCaptureDeviceDiscoverySession* deviceDiscoverySession = [AVCaptureDeviceDiscoverySession
-      discoverySessionWithDeviceTypes:@[
-                            _cameraPosition == AVCaptureDevicePositionFront && _useDepth ?
-                              AVCaptureDeviceTypeBuiltInTrueDepthCamera :
-                              AVCaptureDeviceTypeBuiltInWideAngleCamera]
+      discoverySessionWithDeviceTypes:@[ _cameraPosition == AVCaptureDevicePositionFront &&
+                                                 _useDepth
+                                             ? AVCaptureDeviceTypeBuiltInTrueDepthCamera
+                                             : AVCaptureDeviceTypeBuiltInWideAngleCamera ]
                             mediaType:AVMediaTypeVideo
                              position:_cameraPosition];
   AVCaptureDevice* videoDevice =
@@ -209,9 +208,7 @@
     //   kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
     //   kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
     //   kCVPixelFormatType_32BGRA.
-    _videoDataOutput.videoSettings = @{
-      (id)kCVPixelBufferPixelFormatTypeKey : @(_pixelFormatType)
-    };
+    _videoDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey : @(_pixelFormatType)};
   }
 
   // Remove Old Depth Depth
@@ -227,23 +224,26 @@
       [_session addOutput:_depthDataOutput];
 
       AVCaptureConnection* connection =
-        [_depthDataOutput connectionWithMediaType:AVMediaTypeDepthData];
-
-      if (connection != nil)
-        connection.enabled = true;
+          [_depthDataOutput connectionWithMediaType:AVMediaTypeDepthData];
 
       // Set this when we have a handler.
       if (self.delegateQueue) {
         [_depthDataOutput setDelegate:self callbackQueue:self.delegateQueue];
       }
-    }
-    else
+    } else
       _depthDataOutput = nil;
   }
 
   if (_useCustomOrientation) {
     AVCaptureConnection* connection = [_videoDataOutput connectionWithMediaType:AVMediaTypeVideo];
     connection.videoOrientation = _orientation;
+  }
+
+  {
+    AVCaptureConnection* connection = [_videoDataOutput connectionWithMediaType:AVMediaTypeVideo];
+    if ([connection isCameraIntrinsicMatrixDeliverySupported]) {
+      [connection setCameraIntrinsicMatrixDeliveryEnabled:YES];
+    }
   }
 
   _setupDone = YES;
@@ -263,8 +263,21 @@
 
 // Receives frames from the camera. Invoked on self.frameHandlerQueue.
 - (void)captureOutput:(AVCaptureOutput*)captureOutput
-didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
-       fromConnection:(AVCaptureConnection*)connection {
+    didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+           fromConnection:(AVCaptureConnection*)connection {
+  if (!_didReadCameraIntrinsicMatrix) {
+    // Get camera intrinsic matrix.
+    CFTypeRef cameraIntrinsicData =
+        CMGetAttachment(sampleBuffer, kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix, nil);
+    if (cameraIntrinsicData != nil) {
+      CFDataRef cfdr = (CFDataRef)cameraIntrinsicData;
+      matrix_float3x3* intrinsicMatrix = (matrix_float3x3*)(CFDataGetBytePtr(cfdr));
+      if (intrinsicMatrix != nil) {
+        _cameraIntrinsicMatrix = *intrinsicMatrix;
+      }
+    }
+    _didReadCameraIntrinsicMatrix = YES;
+  }
   CVPixelBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
   CMTime timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
   if ([self.delegate respondsToSelector:@selector(processVideoFrame:timestamp:fromSource:)]) {
@@ -277,10 +290,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 #pragma mark - AVCaptureDepthDataOutputDelegate methods
 
 // Receives depth frames from the camera. Invoked on self.frameHandlerQueue.
-- (void)depthDataOutput:(AVCaptureDepthDataOutput *)output
-     didOutputDepthData:(AVDepthData *)depthData
+- (void)depthDataOutput:(AVCaptureDepthDataOutput*)output
+     didOutputDepthData:(AVDepthData*)depthData
               timestamp:(CMTime)timestamp
-             connection:(AVCaptureConnection *)connection {
+             connection:(AVCaptureConnection*)connection {
   if (depthData.depthDataType != kCVPixelFormatType_DepthFloat32) {
     depthData = [depthData depthDataByConvertingToDepthDataType:kCVPixelFormatType_DepthFloat32];
   }
